@@ -6,6 +6,8 @@
     "start:server": "npm run dev --prefix server",
     "start:client": "npm run dev --prefix client",
     "dev": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "lint": "eslint . --ext .js,.ts",
+    "lint:fix": "eslint . --ext .js,.ts --fix",
     "test:server:unit": "npm run test:unit --prefix server",
     "test:server:integration": "npm run test:integration --prefix server",
     "test:client:unit": "npm run test --prefix client",
@@ -19,5 +21,14 @@
   "description": "",
   "dependencies": {
     "concurrently": "^9.1.2"
+  },
+  "devDependencies": {
+    "@eslint/css": "^0.10.0",
+    "@eslint/js": "^9.31.0",
+    "@eslint/json": "^0.13.0",
+    "@eslint/markdown": "^7.0.0",
+    "eslint": "^9.31.0",
+    "globals": "^16.3.0",
+    "typescript-eslint": "^8.36.0"
   }
 }

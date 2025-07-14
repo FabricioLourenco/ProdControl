@@ -1,6 +1,5 @@
-// src/App.tsx
 import { useState, useEffect } from 'react';
-import './App.css'; // Mantenha o App.css se quiser ou remova
+import './App.css'; 
 
 interface Product {
   id: number;
@@ -15,7 +14,7 @@ function App() {
   const [newProduct, setNewProduct] = useState({ name: '', description: '', price: 0, stock: 0 });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
-  const API_BASE_URL = 'http://localhost:3000'; // URL do seu backend
+  const API_BASE_URL = 'http://localhost:3000'; 
 
   useEffect(() => {
     fetchProducts();
@@ -54,6 +53,7 @@ function App() {
     }
   };
 
+  // A função de editar foi mantida EXATAMENTE como no original, conforme solicitado.
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
@@ -76,16 +76,28 @@ function App() {
     }
   };
 
+  // --- FUNÇÃO DE DELETAR CORRIGIDA ---
   const handleDeleteProduct = async (id: number) => {
     try {
-      const response = await fetch(`<span class="math-inline">\{API\_BASE\_URL\}/products/</span>{id}`, {
+      // 1. Sintaxe da URL corrigida para usar acentos graves (template literals).
+      const response = await fetch(`${API_BASE_URL}/products/${id}`, {
         method: 'DELETE',
       });
+
+      // 2. Lógica adicionada para tratar a resposta 204 (No Content) do backend.
+      // Se a deleção foi um sucesso, o status será 204 e não tentaremos ler um JSON.
+      if (response.status === 204) {
+        console.log('Produto deletado com sucesso');
+        fetchProducts(); // Apenas atualiza a lista de produtos.
+        return; // Encerra a função aqui.
+      }
+      
+      // Se a resposta não for 'ok' E não for '204', então é um erro com mensagem.
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json(); // Tenta ler o corpo do erro.
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-      fetchProducts(); // Refetch para atualizar a lista
+
     } catch (error) {
       console.error("Erro ao deletar produto:", error);
       alert(`Erro ao deletar produto: ${error instanceof Error ? error.message : String(error)}`);
@@ -169,7 +181,7 @@ function App() {
             {products.map((product) => (
               <tr key={product.id}>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{product.id}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{product.name}</td>
+                <td style={{ border: '1-px solid #ddd', padding: '8px' }}>{product.name}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>R$ {product.price.toFixed(2)}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{product.stock}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
