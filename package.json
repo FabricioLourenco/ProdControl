@@ -11,7 +11,8 @@
     "test:client:unit": "npm run test --prefix client",
     "build:server": "npm run build --prefix server",
     "build:client": "npm run build --prefix client",
-    "build:all": "npm run build:server && npm run build:client"
+    "build:all": "npm run build:server && npm run build:client",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
@@ -19,5 +20,14 @@
   "description": "",
   "dependencies": {
     "concurrently": "^9.1.2"
+  },
+  "devDependencies": {
+    "@eslint/css": "^0.10.0",
+    "@eslint/js": "^9.31.0",
+    "@eslint/json": "^0.13.0",
+    "@eslint/markdown": "^7.0.0",
+    "eslint": "^9.31.0",
+    "globals": "^16.3.0",
+    "typescript-eslint": "^8.37.0"
   }
 }
