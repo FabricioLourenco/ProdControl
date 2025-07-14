@@ -59,20 +59,20 @@ function App() {
     if (!editingProduct) return;
 
     try {
-      const response = await fetch(`<span class="math-inline">\{API\_BASE\_URL\}/products/</span>{editingProduct.id}`, {
+      const response = await fetch(`${API_BASE_URL}/products/${editingProduct.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingProduct),
       });
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(errorData.error || `Erro ${response.status}`);
       }
       setEditingProduct(null);
       fetchProducts();
     } catch (error) {
       console.error("Erro ao atualizar produto:", error);
-      alert(`Erro ao atualizar produto: ${error instanceof Error ? error.message : String(error)}`);
+      alert(error instanceof Error ? error.message : String(error));
     }
   };
 

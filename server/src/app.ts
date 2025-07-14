@@ -59,19 +59,19 @@ app.post('/products', async (req, res) => {
 
 // PUT /products/:id - Atualizar um produto
 app.put('/products/:id', async (req, res) => {
-    const { id } = req.params;
+    const id = +req.params.id;
     const { name, description, price, stock } = req.body;
+    if (!name || !price || !stock)
+        return res.status(400).json({ error: 'Nome, preço e estoque são obrigatórios.' });
     try {
-        const updatedProduct = await prisma.product.update({
-            where: { id: parseInt(id) },
-            data: { name, description, price, stock },
+        const p = await prisma.product.update({
+            where: { id },
+            data: { name, description, price: +price, stock: +stock }
         });
-        res.json(updatedProduct);
+        res.json(p)
     } catch (error: any) {
-        if (error.code === 'P2025') { // Erro de registro não encontrado para update
-            return res.status(404).json({ error: 'Produto não encontrado para atualização.' });
-        }
-        res.status(500).json({ error: 'Erro ao atualizar produto.' });
+        if (error.code === 'P2025') return res.status(404).json({ error: 'Produto não encontrado.' });
+        res.status(500).json({ error: 'Erro.' });
     }
 });
 
