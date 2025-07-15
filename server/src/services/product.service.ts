@@ -91,8 +91,15 @@ export class ProductService {
   }
 
   static async deleteProduct(id: number) {
-    await prisma.product.delete({
-      where: { id }
-    });
+    try {
+      await prisma.product.delete({
+        where: { id }
+      });
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        throw new ProductNotFoundError();
+      }
+      throw error;
+    }
   }
 }
