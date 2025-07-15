@@ -50,8 +50,14 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     const updatedProduct = await ProductService.updateProduct(parseInt(req.params.id), req.body);
     res.json(updatedProduct);
   } catch(error) {
-    console.error('Erro ao atualizar produto:', error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Erro no servidor' });
+    if (error instanceof ProductAlreadyCreatedError)
+      res.status(StatusCodes.CONFLICT).json({ message: error.message })
+    else if (error instanceof ProductNotFoundError)
+      res.status(StatusCodes.BAD_REQUEST).json({ message: error.message })
+    else {
+      console.error('Erro ao atualizar produto:', error);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Erro no servidor' });
+    }
   }
 }
 

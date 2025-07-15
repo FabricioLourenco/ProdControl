@@ -4,6 +4,7 @@ import { prisma } from "../../utils/prisma";
 import { faker } from "@faker-js/faker/.";
 import { ProductFieldsRequiredError } from "../../errors/ProductFieldsRequiredError";
 import { ProductAlreadyCreatedError } from "../../errors/ProductAlreadyCreatedError";
+import { ProductNotFoundError } from "../../errors/ProductNotFoundError";
 
 jest.mock('../../utils/prisma', () => ({
   prisma: {
@@ -77,10 +78,9 @@ describe('ProducService', () => {
 
       // Assert (verificar)
       expect(resultado?.description).toBeUndefined();
-    })
-  });
+    });
 
-  it('deve lançar erro se o campo "name" estiver ausente', async () => {
+      it('deve lançar erro se o campo "name" estiver ausente', async () => {
     // Arrange (preparar)
     const dadosInvalidos = { price: 50.00, stock: 10 };
 
@@ -110,23 +110,111 @@ describe('ProducService', () => {
       .toThrow(ProductFieldsRequiredError);
   });
 
-  it('deve lançar erro se um produto com o mesmo nome já existir', async () => {
-    // Arrange (preparar)
-    const dadosProdutoExistente = {
-      name  : 'Produto que já existe',
-      price : 150.00,
-      stock : 15,
-    };
+    it('deve lançar erro se um produto com o mesmo nome já existir', async () => {
+      // Arrange (preparar)
+      const dadosProdutoExistente = {
+        name  : 'Produto que já existe',
+        price : 150.00,
+        stock : 15,
+      };
 
-    (prisma.product.create as jest.Mock).mockRejectedValue({
-      code: 'P2002',
-      meta: { target: ['name'] },
+      (prisma.product.create as jest.Mock).mockRejectedValue({
+        code: 'P2002',
+        meta: { target: ['name'] },
+      });
+
+      // Act (agir) & Assert (verificar)
+      await expect(ProductService.createProduct(dadosProdutoExistente))
+        .rejects
+        .toThrow(ProductAlreadyCreatedError);
+    });
+  });
+
+  describe('updateProduct', () => {
+    it('deve atualizar o produto com os dados fornecidos', async () => {
+      // Arrange (preparar)
+      const dadosAtualizacao = {
+        name        : 'Produto Atualizado',
+        description : 'Nova Descrição',
+        price       : 10.00,
+        stock       : 5,
+      };
+
+      const produtoAtualizado = {
+        id: 1,
+        ...dadosAtualizacao,
+      };
+
+      (prisma.product.update as jest.Mock).mockResolvedValue(produtoAtualizado);
+
+      // Act (agir)
+      const resultado = await ProductService.updateProduct(1, dadosAtualizacao);
+
+      // Assert (verificar)
+      expect(prisma.product.update).toHaveBeenCalledWith({
+        where : { id: 1 },
+        data  : { ...dadosAtualizacao },
+      });
+
+      expect(resultado).toEqual(produtoAtualizado);
     });
 
-    // Act (agir) & Assert (verificar)
-    await expect(ProductService.createProduct(dadosProdutoExistente))
-      .rejects
-      .toThrow(ProductAlreadyCreatedError);
+    it('deve permitir atualização do produto sem descrição', async () => {
+      // Arrange (preparar)
+      const dadosAtualizacao = {
+        name        : 'Produto Atualizado',
+        price       : 10.00,
+        stock       : 5,
+      };
+
+      const produtoAtualizado = {
+        id: 1,
+        ...dadosAtualizacao,
+      };
+
+      (prisma.product.update as jest.Mock).mockResolvedValue(produtoAtualizado);
+
+      // Act (agir)
+      const resultado = await ProductService.updateProduct(1, dadosAtualizacao);
+
+      // Assert (verificar)
+      expect(resultado).toEqual(produtoAtualizado);
+    });
+
+    it('deve lançar erro ao tentar atualizar um produto que não existe', async () => {
+      // Arrange (preparar)
+      const dadosAtualizacao = {
+        name: 'Nome qualquer',
+        price: 10.00,
+        stock: 1,
+      };
+      (prisma.product.update as jest.Mock).mockRejectedValue({
+        code: 'P2025',
+      });
+
+      // Act (agir) & Assert (verificar)
+      await expect(ProductService.updateProduct(999, dadosAtualizacao))
+        .rejects
+        .toThrow(ProductNotFoundError);
+    });
+
+    it('deve lançar erro ao tentar atualizar para um nome que já existe', async () => {
+      // Arrange (preparar)
+      const dadosAtualizacao = {
+        name: 'Produto 2',
+        price: 10.00,
+        stock: 5,
+      };
+      (prisma.product.update as jest.Mock).mockRejectedValue({
+        code: 'P2002',
+        meta: { target: ['name'] },
+      });
+
+      // Act (agir) & Assert (verificar)
+      await expect(ProductService.updateProduct(1, dadosAtualizacao))
+        .rejects
+        .toThrow(ProductAlreadyCreatedError);
+    });
   });
 });
 
