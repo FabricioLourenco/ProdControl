@@ -130,6 +130,49 @@ describe('ProducService', () => {
     });
   });
 
+    describe('getAllProducts', () => {
+    it('deve retornar uma lista de produtos', async () => {
+      // Arrange
+      const productsMock = [
+        { id: 1, name: 'Produto 1', description: '...', price: 10, stock: 1 },
+        { id: 2, name: 'Produto 2', description: '...', price: 20, stock: 2 },
+      ];
+      (prisma.product.findMany as jest.Mock).mockResolvedValue(productsMock);
+
+      // Act
+      const result = await ProductService.getProducts();
+
+      // Assert
+      expect(result).toEqual(productsMock);
+      expect(prisma.product.findMany).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getProductById', () => {
+    it('deve retornar um produto quando um ID válido for fornecido', async () => {
+      // Arrange
+      const productMock = { id: 1, name: 'Produto Teste', description: '...', price: 10, stock: 1 };
+      (prisma.product.findUnique as jest.Mock).mockResolvedValue(productMock);
+
+      // Act
+      const result = await ProductService.getProductById(1);
+
+      // Assert
+      expect(result).toEqual(productMock);
+      expect(prisma.product.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+    });
+
+    it('deve lançar erro se o produto não for encontrado', async () => {
+      // Arrange
+      (prisma.product.findUnique as jest.Mock).mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(ProductService.getProductById(999))
+        .rejects
+        .toThrow(ProductNotFoundError);
+    });
+  });
+
   describe('updateProduct', () => {
     it('deve atualizar o produto com os dados fornecidos', async () => {
       // Arrange (preparar)

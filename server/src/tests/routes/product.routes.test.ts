@@ -93,6 +93,63 @@ describe('ProductController', () => {
     });
   });
 
+  describe('GET /products', () => {
+    it('deve retornar uma lista de produtos e status 200', async () => {
+      // Arrange
+      await prisma.product.createMany({
+        data: [
+          { name: `Produto A ${Date.now()}`, price: 10, stock: 1 },
+          { name: `Produto B ${Date.now()}`, price: 20, stock: 2 },
+        ],
+      });
+
+      // Act
+      const response = await request(app).get(URL);
+
+      // Assert
+      expect(response.statusCode).toBe(StatusCodes.OK);
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBeGreaterThanOrEqual(2);
+      expect(response.body[0]).toHaveProperty('id');
+      expect(response.body[0]).toHaveProperty('name');
+    });
+  });
+
+  describe('GET /products/:id', () => {
+    it('deve retornar um produto específico', async () => {
+      // Arrange
+      const product = await prisma.product.create({
+        data: {
+          name: `Produto para Buscar ${Date.now()}`,
+          price: 99.99,
+          stock: 5,
+          description: 'Um produto específico'
+        },
+      });
+
+      // Act
+      const response = await request(app).get(`${URL}/${product.id}`);
+
+      // Assert
+      expect(response.statusCode).toBe(StatusCodes.OK);
+      expect(response.body.id).toBe(product.id);
+      expect(response.body.name).toBe(product.name);
+      expect(response.body.description).toBe(product.description);
+    });
+
+    it('deve retornar erro se o produto não for encontrado', async () => {
+      // Arrange
+      const idInexistente = 999999;
+
+      // Act
+      const response = await request(app).get(`${URL}/${idInexistente}`);
+
+      // Assert
+      expect(response.statusCode).toBe(StatusCodes.NOT_FOUND);
+      expect(response.body.message).toBe(new ProductNotFoundError().message);
+    });
+  });
+
   describe('PUT /products/:id', () => {
     it('deve atualizar um produto existente com sucesso', async () => {
       // Arrange (preparar)
