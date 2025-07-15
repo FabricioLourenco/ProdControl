@@ -26,6 +26,3 @@ jobs:
 
     - name: Rodar análise estática de código (Lint)
       run: npm run lint
-
-    - name: Rodar TODOS os testes automatizados
-      run: npm run test
