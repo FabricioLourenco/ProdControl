@@ -3,4 +3,5 @@ dist/
 prisma/migrations/
 prisma/dev.db
 .env
+.env.test
 prisma/dev.db-journal
