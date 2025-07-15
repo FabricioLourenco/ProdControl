@@ -66,7 +66,11 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
     await ProductService.deleteProduct(parseInt(req.params.id));
     res.status(StatusCodes.NO_CONTENT).send();
   } catch(error) {
-    console.error('Erro ao deletar produto:', error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Erro no servidor' });
+    if (error instanceof ProductNotFoundError) {
+      res.status(StatusCodes.NOT_FOUND).json({ message: error.message });
+    } else {
+      console.error('Erro ao deletar produto:', error);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Erro no servidor' });
+    }
   }
 }

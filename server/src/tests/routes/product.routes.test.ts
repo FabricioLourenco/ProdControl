@@ -181,4 +181,42 @@ describe('ProductController', () => {
         expect(response.body.message).toBe(new ProductAlreadyCreatedError().message);
     });
   });
+
+  describe('DELETE /products/:id', () => {
+    it('deve deletar um produto existente', async () => {
+      // Arrange (preparar)
+      const product = await prisma.product.create({
+        data: {
+          name: `Produto para Deletar ${new Date().getTime()}`,
+          price: 10.00,
+          stock: 1,
+        }
+      });
+
+      // Act (agir)
+      const response = await request(app)
+        .delete(`${URL}/${product.id}`);
+
+      // Assert (verificar)
+      expect(response.statusCode).toBe(StatusCodes.NO_CONTENT);
+
+      const deletedProduct = await prisma.product.findUnique({
+        where: { id: product.id }
+      });
+      expect(deletedProduct).toBeNull();
+    });
+
+    it('deve retornar erro ao tentar deletar um produto inexistente', async () => {
+      // Arrange (preparar)
+      const idInexistente = 999999;
+
+      // Act (agir)
+      const response = await request(app)
+        .delete(`${URL}/${idInexistente}`);
+
+      // Assert (verificar)
+      expect(response.statusCode).toBe(StatusCodes.NOT_FOUND);
+      expect(response.body.message).toBe(new ProductNotFoundError().message);
+    });
+  });
 });

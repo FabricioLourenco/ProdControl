@@ -216,5 +216,35 @@ describe('ProducService', () => {
         .toThrow(ProductAlreadyCreatedError);
     });
   });
+
+  describe('deleteProduct', () => {
+    it('deve deletar um produto existente', async () => {
+      // Arrange (preparar)
+      const productId = 1;
+      (prisma.product.delete as jest.Mock).mockResolvedValue({});
+
+      // Act (agir)
+      await ProductService.deleteProduct(productId);
+
+      // Assert (verificar)
+      expect(prisma.product.delete).toHaveBeenCalledWith({
+        where: { id: productId },
+      });
+      expect(prisma.product.delete).toHaveBeenCalledTimes(1);
+    });
+
+    it('deve lançar erro ao tentar deletar produto inexistente', async () => {
+      // Arrange (preparar)
+      const productId = 999;
+      (prisma.product.delete as jest.Mock).mockRejectedValue({
+        code: 'P2025',
+      });
+
+      // Act (agir) & Assert (verificar)
+      await expect(ProductService.deleteProduct(productId))
+        .rejects
+        .toThrow(ProductNotFoundError);
+    });
+  });
 });
 
