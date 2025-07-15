@@ -7,6 +7,7 @@ import { prisma } from "../../utils/prisma";
 import { setupTestDB, disconnectTestDB } from "../setup.test.db";
 import { ProductAlreadyCreatedError } from "../../errors/ProductAlreadyCreatedError";
 import { ProductFieldsRequiredError } from "../../errors/ProductFieldsRequiredError";
+import { ProductNotFoundError } from "../../errors/ProductNotFoundError";
 
 const URL = '/products'
 
@@ -92,4 +93,92 @@ describe('ProductController', () => {
     });
   });
 
+  describe('PUT /products/:id', () => {
+    it('deve atualizar um produto existente com sucesso', async () => {
+      // Arrange (preparar)
+      const produtoOriginal = await prisma.product.create({
+        data: {
+          name: `Produto Original ${new Date().getTime()}`,
+          description: 'Descrição original',
+          price: 100.00,
+          stock: 20,
+        }
+      });
+
+      const dadosAtualizacao = {
+        name: `Produto Atualizado ${new Date().getTime()}`,
+        description: 'Descrição atualizada',
+        price: 150.50,
+        stock: 25,
+      };
+
+      // Act (agir)
+      const response = await request(app)
+        .put(`${URL}/${produtoOriginal.id}`)
+        .send(dadosAtualizacao);
+
+      // Assert (verificar)
+      expect(response.statusCode).toBe(StatusCodes.OK);
+      expect(response.body).toEqual({
+        id: produtoOriginal.id,
+        ...dadosAtualizacao,
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      });
+      expect(new Date(response.body.updatedAt).getTime()).toBeGreaterThan(new Date(produtoOriginal.updatedAt).getTime());
+    });
+
+    it('deve retornar erro ao tentar atualizar um produto que não existe', async () => {
+        // Arrange (preparar)
+        const idInexistente = 999999;
+        const dadosAtualizacao = {
+            name: 'Nome qualquer',
+            description: 'Descrição qualquer',
+            price: 10.00,
+            stock: 1,
+        };
+
+        // Act (agir)
+        const response = await request(app)
+            .put(`${URL}/${idInexistente}`)
+            .send(dadosAtualizacao);
+
+        // Assert (verificar)
+        expect(response.statusCode).toBe(StatusCodes.BAD_REQUEST);
+        expect(response.body.message).toBe(new ProductNotFoundError().message);
+    });
+
+    it('deve retornar erro ao tentar atualizar um produto com um nome de outro que já existe', async () => {
+        // Arrange (preparar)
+        const produto1 = await prisma.product.create({
+            data: {
+                name: `Produto A ${new Date().getTime()}`,
+                price: 10.00,
+                stock: 1,
+            }
+        });
+        const produto2 = await prisma.product.create({
+            data: {
+                name: `Produto B ${new Date().getTime()}`,
+                price: 20.00,
+                stock: 2,
+            }
+        });
+
+        const dadosAtualizacao = {
+            name: produto2.name,
+            price: 15.00,
+            stock: 5,
+        };
+
+        // Act (agir)
+        const response = await request(app)
+            .put(`${URL}/${produto1.id}`)
+            .send(dadosAtualizacao);
+
+        // Assert (verificar)
+        expect(response.statusCode).toBe(StatusCodes.CONFLICT);
+        expect(response.body.message).toBe(new ProductAlreadyCreatedError().message);
+    });
+  });
 });

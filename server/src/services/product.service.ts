@@ -64,23 +64,30 @@ export class ProductService {
   static async updateProduct(
     id: number,
     data: {
-      name        : string;
-      description : string;
-      price       : number;
-      stock       : number;
+      name         : string;
+      description? : string;
+      price        : number;
+      stock        : number;
     }
   ) {
-    const updatedTask = await prisma.product.update({
-      where: { id },
-      data: {
-        name        : data.name,
-        description : data.description,
-        price       : data.price,
-        stock       : data.stock,
-      },
-    });
+    try {
+      const updatedProduct = await prisma.product.update({
+        where: { id },
+        data: {
+          name        : data.name,
+          description : data.description,
+          price       : data.price,
+          stock       : data.stock,
+        },
+      });
 
-    return updatedTask;
+      return updatedProduct;
+    } catch(error: any) {
+      if (error.code === 'P2025')
+        throw new ProductNotFoundError();
+      if (error.code === 'P2002')
+        throw new ProductAlreadyCreatedError();
+    }
   }
 
   static async deleteProduct(id: number) {
